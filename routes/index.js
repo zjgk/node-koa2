@@ -1,7 +1,11 @@
-const router = require('koa-router')()
+const router = require('koa-router')();
+let  DB=require('../module/db.js');
+
 
 router.get('/', async (ctx, next) => {
-  ctx.body = "<div>Hello6666</div>"
+  let result =await DB.find("cats");
+  ctx.body = result;
+
 })
 
 router.get('/home', async (ctx, next) => {

@@ -1,15 +1,16 @@
 const Koa = require('koa');
 const bodyParser = require('koa-bodyparser');
-const mongoose = require('mongoose');
 const cors = require('koa2-cors')
 const app = new Koa();
 const Koa_Session = require('koa-session');
+const router = require('./routes/index.js');
+
 
 // 配置session
 const session_signed_key = ["some secret hurr"];  // 这个是配合signed属性的签名key
 const session_config = {
     key: 'koa:sess', /**  cookie的key。 (默认是 koa:sess) */
-    maxAge: 300,   /**  session 过期时间，以毫秒ms为单位计算 。*/
+    maxAge: 1000*60*30,   /**  session 过期时间，以毫秒ms为单位计算 。*/
     autoCommit: true, /** 自动提交到响应头。(默认是 true) */
     overwrite: true, /** 是否允许重写 。(默认是 true) */
     httpOnly: true, /** 是否设置HttpOnly，如果在Cookie中设置了"HttpOnly"属性，那么通过程序(JS脚本、Applet等)将无法读取到Cookie信息，这样能有效的防止XSS攻击。  (默认 true) */
@@ -21,10 +22,11 @@ const session = Koa_Session(session_config, app)
 app.keys = session_signed_key;
 // 使用中间件，注意有先后顺序
 app.use(session);
-
 app.use(bodyParser());  // 解析request的body
-const router = require('./routes/index.js');
-
+app.keys = session_signed_key;
+// 使用中间件，注意有先后顺序
+app.use(session);
+app.use(bodyParser());  // 解析request的body
 
 // 处理跨域的配置
 app.use(cors({
@@ -34,32 +36,6 @@ app.use(cors({
     allowMethods: ['GET', 'POST', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Custom-Header', 'anonymous'],
 }));
-
-
-
-const db = mongoose.connect("mongodb://localhost/test")
-
-// var UserSchema = new mongoose.Schema({
-//     username:String,
-//     password:String,
-// 	email:String,
-// 	name:String
-// });
-// var User = mongoose.model('user',UserSchema);
-// const Cat = mongoose.model('Cat', { name: String });
-// router.get('/', async (ctx, next) => {
-// 	let val = null
-// 	const data = await User.findOne({name:'zhangnushi'})
-// 	const data2 = await Cat.findOne({name:'Zildjian'})
-// 	console.log('data', data,data2)
-// 	const result = {
-// 		code:200,
-// 		response: data2,
-// 		ts: 12345
-// 	}
-// 	ctx.response.body = result
-// 	return result
-// })
 
 app.use(async(ctx ,next)=> {
     const databaseUserName = "testSession";
@@ -95,7 +71,6 @@ app.use(async(ctx ,next)=> {
 
 }
 );
-
 
 app.use(router.routes());
 
